@@ -35,6 +35,7 @@ fig.set_size_inches(6,4)
 
 
 
+
 dat['age'].value_counts().plot(kind='bar', title='Age',figsize=(20,8)) 
 
 dat['weight'].value_counts().plot(kind='bar', title='Weight',figsize=(20,8)) 
