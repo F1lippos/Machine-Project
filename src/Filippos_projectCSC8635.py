@@ -23,7 +23,7 @@ from matplotlib.gridspec import GridSpec
 ##################################
 # Data Import
 ##################################
-dat = pd.read_csv('C:/Users/Filippos/Desktop/Master/data_subjects_info.csv')
+dat = pd.read_csv('C:/Users/Filippos/Desktop/Master/CSC8635-Machine Project/data/data_subjects_info.csv')
 ##################################
 # Data Overview 
 ##################################
@@ -74,6 +74,12 @@ ax.set_yticklabels(
 );
 
 # Plot 2
+
+temp = dat.copy()
+temp=temp.drop(columns=['code'])
+temp.dtypes
+sns.pairplot(temp, size=3)
+
 sns.pairplot(dat, size=3)
 
 sns.pairplot(dat,hue ='age', size=3)
@@ -104,8 +110,8 @@ fig.set_size_inches(15, 10)
 ##################################
  
 import os
-print(os.listdir("C:/Users/Filippos/Downloads/A_DeviceMotion_data/A_DeviceMotion_data"))
-folders = glob('C:/Users/Filippos/Downloads/A_DeviceMotion_data/A_DeviceMotion_data/*_*')
+print(os.listdir("C:/Users/Filippos/Desktop/Master/CSC8635-Machine Project/data/A_DeviceMotion_data/A_DeviceMotion_data"))
+folders = glob('C:/Users/Filippos/Desktop/Master/CSC8635-Machine Project/data/A_DeviceMotion_data/A_DeviceMotion_data/*_*')
 
 
 folders = [s for s in folders if "csv" not in s]
@@ -115,14 +121,13 @@ activity_codes = {'dws':0,'jog':1,'sit':2,'std':3,'ups':4,'wlk':5}
 activity_types = list(activity_codes.keys())
 
 for j in folders:
-    print('j',j)
+    ##print('j',j)
     csv = glob(j + '/*')
     for i in csv:
+        #print('load file of participant',i)
         df = pd.read_csv(i)
-        df['activity'] = activity_codes[j[68:71]]
+        df['activity'] = activity_codes[j[102:105]]
         df['sub_num'] = i[len(j)+5:-4]
-        #df['activity'] = activity_codes[j[65:68]]
-       # df['sub_num'] = i[len(j)+5:-4]
         df_all_list.append(df)
         df_sample.append(df.sample(n=300))
                
@@ -222,13 +227,14 @@ for act in activity_types:
 
 
 # Plot class distribution:
-activiry_counts = df_all.activity.apply(lambda x: activity_types[x] ).value_counts()
+
 #activiry_counts.plot(kind='bar', title='Activity Class Distibution')
 #plt.show()
 
 
 
 # Plot a pie chart for different activities
+activiry_counts = df_all.activity.apply(lambda x: activity_types[x] ).value_counts()
 activities = ['Walking Downstairs', 'Jogging', 'Sitting', 'Standing', 'Walking Upstairs', 'Walking']
 plt.rcParams.update({'figure.figsize': [20, 20], 'font.size': 24})
 plt.pie(activiry_counts, labels = activities, autopct = '%0.2f')
@@ -276,9 +282,13 @@ X_train, X_validation, Y_train, Y_validation = train_test_split(X, y, test_size=
 #############################################
 ##     CLUSTERING PCA        K-MEAN 
 #############################################
+## Clustering the data activities.
+## Getting the set of the measurments figures
+arrayclu = df_all.values
+Xclu = arrayclu[:,0:12]
 
 
-#3 Using the elbow method to find out the optimal number of #clusters. 
+# Using the elbow method to find out the optimal number of #clusters. 
 #KMeans class from the sklearn library.
 from sklearn.cluster import KMeans
 wcss=[]
@@ -291,7 +301,7 @@ for i in range(1,11):
 #find the final clusters when the K-meands algorithm is running. we #enter the default value of 300
 #the next parameter is n_init which is the number of times the #K_means algorithm will be run with
 #different initial centroid.
-     kmeans.fit(X)
+     kmeans.fit(Xclu)
 #kmeans algorithm fits to the X dataset
      wcss.append(kmeans.inertia_)
 #kmeans inertia_ attribute is:  Sum of squared distances of samples #to their closest cluster center.
@@ -305,29 +315,7 @@ plt.show()
 
 
 
-# agglomerative clustering
-from numpy import unique
-from numpy import where
-from sklearn.datasets import make_classification
-from sklearn.cluster import AgglomerativeClustering
-from matplotlib import pyplot
-# define dataset
-X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=4)
-# define the model
-model = AgglomerativeClustering(n_clusters=6)
-# fit model and predict clusters
-yhat = model.fit_predict(X)
-# retrieve unique clusters
-clusters = unique(yhat)
-# create scatter plot for samples from each cluster
-for cluster in clusters:
-	# get row indexes for samples with this cluster
-	row_ix = where(yhat == cluster)
-	# create scatter of these samples
-	pyplot.scatter(X[row_ix, 0], X[row_ix, 1])
-# show the plot
-pyplot.show()
-
+ 
 
  # k-means clustering
 from numpy import unique
@@ -336,22 +324,28 @@ from sklearn.datasets import make_classification
 from sklearn.cluster import KMeans
 from matplotlib import pyplot
 # define dataset
-X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=4)
+labels = ['jog','dws','sit','std', 'ups', 'wlk']
+# define dataset
+Xclu, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=4)
 # define the model
 model = KMeans(n_clusters=6)
 # fit the model
-model.fit(X)
+model.fit(Xclu)
 # assign a cluster to each example
-yhat = model.predict(X)
+yhat = model.predict(Xclu)
 # retrieve unique clusters
 clusters = unique(yhat)
 # create scatter plot for samples from each cluster
 for cluster in clusters:
-	# get row indexes for samples with this cluster
-	row_ix = where(yhat == cluster)
-	# create scatter of these samples
-	pyplot.scatter(X[row_ix, 0], X[row_ix, 1] )
+# get row indexes for samples with this cluster
+    row_ix = where(yhat == cluster)
+# create scatter of these samples
+    pyplot.scatter(Xclu[row_ix, 0],Xclu[row_ix, 1] ,label = labels[cluster])
 # show the plot
+plt.legend()
+plt.xlabel('Categorising activities')
+plt.title('Segmentation K-Means')
+plt.show()
 pyplot.show()
 
 
@@ -473,35 +467,23 @@ for i in range(5):
 
 
 ############### Deep Learning 
-dfML.head(3)
-
-dfDL = dfML
-
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from itertools import chain
-# Sacling the Age column
-scaler = MinMaxScaler(feature_range = (0,1))
-a = scaler.fit_transform(dfDL.age.values.reshape(-1, 1))
-x1 = list(chain(*a))
-dfDL.age = x1
-
-b = scaler.fit_transform(dfDL.height.values.reshape(-1, 1))
-x2 = list(chain(*b))
-dfDL.height = x2
-
-
-c = scaler.fit_transform(dfDL.activity.values.reshape(-1, 1))
-x3 = list(chain(*c))
-dfDL.activity = x3
-
-array = dfDL.values
-
-X = array[:,0:12]
-y = array[:,12]
-target =y
  
-X_train, X_validation, Y_train, Y_validation = train_test_split(X, y, test_size=0.20, random_state=1)
+dfDL = dfPersons[["userAcceleration.x","userAcceleration.y","userAcceleration.z","rotationRate.x","rotationRate.y","rotationRate.z","gravity.x","gravity.y","gravity.z","height","age","gender","activity"]]
+X = dfDL.iloc[:,:12].values
+y = dfDL.iloc[:,12:13].values
 
+
+ #Normalizing the data
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X = sc.fit_transform(X)
+
+
+from sklearn.preprocessing import OneHotEncoder
+ohe = OneHotEncoder()
+y = ohe.fit_transform(y).toarray()
+
+X_train, X_validation, Y_train, Y_validation = train_test_split(X, y, test_size=0.20, random_state=1)
 
 
 
@@ -532,7 +514,7 @@ model_dp1 .add(Dense(13, activation='relu', input_shape=(12,)))
 model_dp1 .add(Dense(8, activation='relu'))
 # Add an output layer 
 #model_dp1 .add(Dense(1, activation='sigmoid'))
-model_dp1 .add(Dense(1, activation='softmax'))
+model_dp1 .add(Dense(6, activation='softmax'))
 
 
 # Model summary
@@ -543,84 +525,31 @@ model_dp1 .get_config()
 model_dp1 .get_weights()
 
 model_dp1.compile(loss='categorical_crossentropy',
-              optimizer='SGD',
+              optimizer='adam',
               metrics=['categorical_accuracy'])
 
 # training the model
-model_dp1.fit(x = X_train, 
-          y = Y_train, 
-          batch_size= 10, 
-          epochs = 3, 
-          validation_split= 0.1, 
-          shuffle = True,
-          verbose = 2 
-         )
-
-                
-
-y_preddp1 = model_dp1.predict(X_validation)   #.astype(int)
-score = model_dp1.evaluate(X_validation, Y_validation,verbose=1)
-print(score)
-
-# summarize the first 5 cases
-for i in range(5):
-	print('%s => %d (expected %d)' % (X_validation[i].tolist(), y_preddp1[i], Y_validation[i]))
-    
+from time import time
+##t0 = time()
+history = model_dp1.fit(X_train, Y_train,
+ validation_data = (X_validation,Y_validation),
+ epochs=10,
+ batch_size=64) 
 
 
-############################################################################33
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from keras.callbacks import TensorBoard
-from keras.layers import Input, Dense
-from keras.models import Model
-from keras.regularizers import l2
-from keras.utils import to_categorical
-import keras
-
-
-dfDL = dfML
-array = dfDL.values
-
-X = array[:,0:12]
-y = array[:,12]
-target =y
+ y_pred = model_dp1.predict(X_validation)
+#Converting predictions to label
+pred = list()
+for i in range(len(y_pred)):
+     pred.append(np.argmax(y_pred[i]))
+#Converting one hot encoded test label to label
+test = list()
+for i in range(len(Y_validation)):
+     test.append(np.argmax(Y_validation[i]))
  
-X_train, X_validation, Y_train, Y_validation = train_test_split(X, y, test_size=0.20, random_state=1)
-
-
-#### Construct neural Architeture for baseline model
-input_dim = X.shape[1] 
-input_img = Input(shape=(input_dim,))
-d = Dense(50, activation='relu')(input_img)
-d = Dense(20, activation='relu')(d)
-output = Dense(1, activation='softmax', kernel_regularizer=l2(0.01))(d)
-modeldp2 = Model(input_img,output)
-modeldp2.compile(optimizer='adam', loss='categorical_crossentropy',
-                 metrics=['categorical_accuracy'])
-    
-history = modeldp2.fit(X_train, Y_train,
-                epochs=2,
-                batch_size=1,
-                shuffle=True,
-                verbose=0,
-                validation_data=[X_validation, Y_validation])
-
-### Overall test accuracy
-score = modeldp2.evaluate(X_validation, Y_validation)
-print ('keras test accuracy score:', score[1])
-
-y_preddp2 = modeldp2.predict(X_validation)   #.astype(int)
-
  
-history.history
-
-print("Evaluate on test data")
-results = modeldp2.evaluate(X_validation, Y_validation, batch_size=128)
-print("test loss, test acc:", results)
-
 for i in range(5):
-	print('%s => %d (expected %d)' % (X_validation[i].tolist(), y_preddp2[i], Y_validation[i]))
-    
-    
+    print(' Prediction %d ==> (expected: %d)' % (pred[i], test[i]))
+    #print('%s => %d (expected %d)' % (X_validation[i].tolist(), pred[i],
+       
+  
