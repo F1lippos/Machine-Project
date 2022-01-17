@@ -144,14 +144,12 @@ df_sample_all.isna().sum()
 plt.figure(figsize=(10,10))
 corr = df_sample_all.corr()
 ax = sns.heatmap( corr, vmin=-1, vmax=1, center=0, cmap=sns.diverging_palette(20, 220, n=200),
-    square=True, annot=True
-)
+    square=True, annot=True)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
 ax.set_yticklabels(ax.get_yticklabels(), rotation=45,);
 
 # Vertically stacked subplots
 fig, axs = plt.subplots(6,sharex=True, sharey=True)
-
 fig.suptitle('Vertically stacked subplots')
 activitycolors={0:'red',1:'orange',2:'green',3:'blue',4:'red',5:'grey'}
 #Visualization
@@ -162,6 +160,7 @@ for act in activity_types:
     str2 =  activitycolors[activity_codes[act]] 
     vcolor =  str1+str2 
     axs[activity_codes[act]].plot(dfp['userAcceleration.y'][:500],vcolor)
+
 
 # Plot a pie chart for different activities
 import warnings
@@ -217,12 +216,12 @@ finalDf = pd.concat([principalDf, target], axis = 1)
 ## finalDf.dtypes
 ##vfinalDf.isna().sum()
 
+## Showing the activities based on Principal Component 1 & 2
 fig = plt.figure(figsize = (16,16))
 ax = fig.add_subplot(1,1,1) 
 ax.set_xlabel('Principal Component 1', fontsize = 15)
 ax.set_ylabel('Principal Component 2', fontsize = 15)
 ax.set_title('2 component PCA', fontsize = 20)
- 
 ## {'dws':0,'jog':1,'sit':2,'std':3,'ups':4,'wlk':5}
 labels =['Walking Downstairs', 'Jogging', 'Sitting', 'Standing', 'Walking Upstairs', 'Walking']
 targets =  [0,1,2,3, 4, 5]
@@ -254,10 +253,12 @@ wcss=[]
 #second we will compute the within cluster sum of squares and #appended to our wcss list.
 for i in range(1,11): 
      kmeans = KMeans(n_clusters=i, init ='k-means++', max_iter=300,  n_init=10,random_state=0 )
-#i above is between 1-10 numbers. init parameter is the random #initialization method  
+# Above is between 1-10 numbers. init parameter is the random #initialization method  
+     kmeans.fit(Xclu)
 #kmeans algorithm fits to the X dataset
      wcss.append(kmeans.inertia_)
 #kmeans inertia_ attribute is:  Sum of squared distances of samples #to their closest cluster center.
+
 #4.Plot the elbow graph
 plt.plot(range(1,11),wcss)
 plt.title('The Elbow Method Graph')
@@ -289,6 +290,7 @@ model.fit(Xclu)
 yhat = model.predict(Xclu)
 # retrieve unique clusters
 clusters = unique(yhat)
+
 # create scatter plot for samples from each cluster
 for cluster in clusters:
 	# get row indexes for samples with this cluster
